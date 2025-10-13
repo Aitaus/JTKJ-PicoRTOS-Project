@@ -534,6 +534,16 @@ void init_veml6030() {
 // Note: sampling time should be > IT -> in this case it has been 100ms by defintion. 
 uint32_t veml6030_read_light() {
 
+    int i2c_write_blocking (i2c_inst_t *i2c, uint8_t addr, const uint8_t *src, size_t len, bool nostop);
+
+    int i2c_read_blocking (i2c_inst_t *i2c, uint8_t addr, uint8_t *dst, size_t len, bool nostop);
+
+    uint8_t txBuffer[1];
+    uint8_t rxBuffer[2];
+
+    txBuffer[0] = VEML6030_ALS_REG;
+
+
     // Exercise 2: In order to get the luminance we need to read the value of the VEML6030_ALS_REG (see VEML6030 datasheet)
     //            Use functions i2c_write_blocking and i2_read_blocking to collect luminance data.
     //            These functions are found in the Pico SDK:
