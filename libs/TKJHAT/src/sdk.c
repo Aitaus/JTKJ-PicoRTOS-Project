@@ -534,15 +534,17 @@ void init_veml6030() {
 // Note: sampling time should be > IT -> in this case it has been 100ms by defintion. 
 uint32_t veml6030_read_light() {
 
-    int i2c_write_blocking (i2c_inst_t *i2c, uint8_t addr, const uint8_t *src, size_t len, bool nostop);
-
-    int i2c_read_blocking (i2c_inst_t *i2c, uint8_t addr, uint8_t *dst, size_t len, bool nostop);
-
     uint8_t txBuffer[1];
     uint8_t rxBuffer[2];
 
     txBuffer[0] = VEML6030_ALS_REG;
 
+    i2c_write_blocking (i2c_default, VEML6030_I2C_ADDR, txBuffer, 1, true);
+
+    i2c_read_blocking (i2c_default, VEML6030_I2C_ADDR, rxBuffer, 2, false);
+
+    uint16_t a  = (rxBuffer[1] << 8 | rxBuffer[0]);
+    uint16_t luxVal_uncorrected = a * 0.0576;
 
     // Exercise 2: In order to get the luminance we need to read the value of the VEML6030_ALS_REG (see VEML6030 datasheet)
     //            Use functions i2c_write_blocking and i2_read_blocking to collect luminance data.
@@ -564,7 +566,7 @@ uint32_t veml6030_read_light() {
     //            käyttäen VEML6030-datalehden sivun 5 tietoja.
     //            Lopuksi tallenna arvo muuttujaan luxVal_uncorrected.
   
-    uint32_t luxVal_uncorrected = 0; 
+    //uint32_t luxVal_uncorrected = 0; 
     if (luxVal_uncorrected>1000){
         // Polynomial is pulled from pg 10 of the datasheet. 
         // See https://github.com/sparkfun/SparkFun_Ambient_Light_Sensor_Arduino_Library/blob/efde0817bd6857863067bd1653a2cfafe6c68732/src/SparkFun_VEML6030_Ambient_Light_Sensor.cpp#L409
