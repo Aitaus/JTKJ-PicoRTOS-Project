@@ -20,6 +20,7 @@ enum state { WAITING=1, DATA_READY};
 enum state programState = WAITING;
 
 
+// Napin painallus laittaa valosensorin päälle ja pois.
 static void btn_fxn(uint gpio, uint32_t eventMask) {
     toggle_led();
 }
@@ -70,7 +71,7 @@ void imu_task(void *pvParameters) {
     }
 }
 
-
+/*
 static void print_task(void *arg){
     (void)arg;
     
@@ -85,6 +86,7 @@ static void print_task(void *arg){
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+*/
 
 int main() {
   
@@ -97,49 +99,20 @@ int main() {
     
     init_hat_sdk();
     sleep_ms(300); //Wait some time so initialization of USB and hat is done.
-    //gpio_set_irq_enabled_with_callback(BUTTON1, GPIO_IRQ_EDGE_FALL, true, btn_fxn);
+    gpio_set_irq_enabled_with_callback(BUTTON1, GPIO_IRQ_EDGE_FALL, true, btn_fxn);
     init_red_led();
 
    TaskHandle_t hSensorTask, hPrintTask, hUSB = NULL;
 
-
-    //  from the hat_imu_ex example
+    //  Luodaan gyro sensori taski.
 
     printf("Start acceleration test\n");
-
     TaskHandle_t hIMUTask = NULL;
     BaseType_t result;
-    
     result = xTaskCreate(imu_task, "IMUTask", DEFAULT_STACK_SIZE, NULL, 2, &hIMUTask);
 
     if(result != pdPASS) {
         printf("IMU task creation failed\n");
-        return 0;
-    }
-
-
-    // Create the tasks with xTaskCreate
-    result = xTaskCreate(sensor_task, // (en) Task function
-                "sensor",                        // (en) Name of the task 
-                DEFAULT_STACK_SIZE,              // (en) Size of the stack for this task (in words). Generally 1024 or 2048
-                NULL,                            // (en) Arguments of the task 
-                2,                               // (en) Priority of this task
-                &hSensorTask);                   // (en) A handle to control the execution of this task
-
-    if(result != pdPASS) {
-        printf("Sensor task creation failed\n");
-        return 0;
-    }
-
-    result = xTaskCreate(print_task,  // (en) Task function
-                "print",              // (en) Name of the task 
-                DEFAULT_STACK_SIZE,   // (en) Size of the stack for this task (in words). Generally 1024 or 2048
-                NULL,                 // (en) Arguments of the task 
-                2,                    // (en) Priority of this task
-                &hPrintTask);         // (en) A handle to control the execution of this task
-
-    if(result != pdPASS) {
-        printf("Print Task creation failed\n");
         return 0;
     }
 
