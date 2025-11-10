@@ -15,6 +15,11 @@
 #define CDC_ITF_TX      1
 
 
-int main(void) {
-    
+int state(void) {
+    if ay => 0.85 //and btn_fxn
+        printf(".");
+    if ax >= 0.85 //and btn_fxn
+        printf("-");
+    else
+        printf("Not a clear state")  ;
 }

@@ -19,11 +19,32 @@
 enum state { WAITING=1, DATA_READY};
 enum state programState = WAITING;
 
+enum laiteAsento { PISTE, VIIVA, VÄLI};
+enum laiteAsento asento = VÄLI;
+
+bool napinAsento = false;
 
 // Napin painallus laittaa valosensorin päälle ja pois.
 static void btn_fxn(uint gpio, uint32_t eventMask) {
     toggle_led();
+    napinAsento = true;
 }
+
+//if
+
+int print_asento(void) {
+    if (asento == VIIVA && napinAsento = true){
+        printf("-\n");
+        napinAsento = false;
+    }
+    else if (asento == PISTE && napinAsento = true){
+        printf(".\n");
+        napinAsento = false;
+    }
+    else
+        printf("nfaofnoasdfnsdof");
+}
+
 
 static void sensor_task(void *arg){
     (void)arg;
@@ -41,6 +62,7 @@ static void sensor_task(void *arg){
 void imu_task(void *pvParameters) {
     (void)pvParameters;
     float ax, ay, az, gx, gy, gz, t;
+    float a = 0.85;
     // Setting up the sensor. 
     if (init_ICM42670() == 0) {
         printf("ICM-42670P initialized successfully!\n");
@@ -62,11 +84,24 @@ void imu_task(void *pvParameters) {
     {
         if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
             
-            printf("Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n", ax, ay, az, gx, gy, gz, t);
+            //printf("Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n", ax, ay, az, gx, gy, gz, t);
+            if (ay >= a){
+                //printf(".\n");
+                laiteAsento = PISTE;
+            }
+            else if (ax >= a){
+                //printf("-\n");
+                laiteAsento = VIIVA;
+            }
+            else{
+                //printf("Not a clear state\n");
+                }
 
-        } else {
-            printf("Failed to read imu data\n");
         }
+        
+        else {
+            printf("Failed to read imu data\n");
+            }
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
@@ -87,6 +122,7 @@ static void print_task(void *arg){
     }
 }
 */
+
 
 int main() {
   
