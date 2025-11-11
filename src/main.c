@@ -14,13 +14,15 @@
 #define CDC_ITF_TX      1
 
 
-// tilakoneen esittely
+// Tilakoneen esittely
 
-enum state { WAITING=1, DATA_READY};
-enum state programState = WAITING;
+//enum state { WAITING=1, DATA_READY};
+//enum state programState = WAITING;
 
-enum laiteAsento { PISTE, VIIVA, VÄLI};
-enum laiteAsento asento = VÄLI;
+
+// PISTE = 0, VIIVA = 1 ja VÄLI = 2
+enum asento { PISTE, VIIVA, VÄLI};
+enum asento laiteAsento = VÄLI;
 
 bool napinAsento = false;
 
@@ -28,24 +30,32 @@ bool napinAsento = false;
 static void btn_fxn(uint gpio, uint32_t eventMask) {
     toggle_led();
     napinAsento = true;
+    //printf("Nappia painettu, napin tila nyt %b\n", napinAsento);
 }
 
 //if
 
-int print_asento(void) {
-    if (asento == VIIVA && napinAsento = true){
-        printf("-\n");
-        napinAsento = false;
+void print_asento(void) {
+    if (napinAsento == true) {
+        if (laiteAsento == VIIVA){
+            printf("-");
+            napinAsento = false;
+        }
+        else if (laiteAsento == PISTE){
+            printf(".");
+            napinAsento = false;
+        }
+        else if (laiteAsento == VÄLI){
+            printf("  ");
+        }
+        else
+            printf("nfaofnoasdfnsdof");
     }
-    else if (asento == PISTE && napinAsento = true){
-        printf(".\n");
-        napinAsento = false;
-    }
-    else
-        printf("nfaofnoasdfnsdof");
+    napinAsento = false;      
 }
 
 
+/*
 static void sensor_task(void *arg){
     (void)arg;
 
@@ -57,7 +67,7 @@ static void sensor_task(void *arg){
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-
+*/
 
 void imu_task(void *pvParameters) {
     (void)pvParameters;
@@ -86,23 +96,28 @@ void imu_task(void *pvParameters) {
             
             //printf("Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n", ax, ay, az, gx, gy, gz, t);
             if (ay >= a){
-                //printf(".\n");
                 laiteAsento = PISTE;
+                //printf("%d\n", laiteAsento);
             }
             else if (ax >= a){
-                //printf("-\n");
                 laiteAsento = VIIVA;
+                //printf("%d\n", laiteAsento);
+            }
+            else if (az >= a){
+                laiteAsento = VÄLI;
             }
             else{
                 //printf("Not a clear state\n");
                 }
-
+        
         }
         
         else {
             printf("Failed to read imu data\n");
             }
-        vTaskDelay(pdMS_TO_TICKS(500));
+    print_asento();
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -127,6 +142,7 @@ static void print_task(void *arg){
 int main() {
   
   stdio_init_all();
+
 
     // Uncomment this lines if you want to wait till the serial monitor is connected
     while (!stdio_usb_connected()){
