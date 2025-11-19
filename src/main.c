@@ -14,49 +14,48 @@
 #define CDC_ITF_TX      1
 
 
-// Tilakoneen esittely, alustetaan napin painallus falseksi
+// Picon asennot, jotka mitataan ICM sensorilla.
+enum asento {PISTE, VIIVA, VÄLI, NEWLINE};
 
-//enum state { WAITING=1, DATA_READY};
-//enum state programState = WAITING;
-
-enum asento { PISTE, VIIVA, VÄLI};
+// Picon asennot alustettuna
 enum asento laiteAsento;
 bool napinAsento = false;
 
-// Vasemman napin painallus asettaa napinAsennon falseksi, joka varmistaa, halutaanko tulostaa piste, viiva vai väli.
+// Napin painaminen asettaa napinAsento:n falseksi, joka varmistaa printtaamisen.
 static void btn1_fxn(uint gpio, uint32_t eventMask) {
-    //toggle_led();
     napinAsento = true;
 }
 
-/*
-static void btn2_fxn(uint gpio, uint32_t eventMask) {
-    rgb_led_write(1, 1, 50);
-}
-*/
 
-
-void print_asento(void) {
-    if (napinAsento == true) {
-        if (laiteAsento == VIIVA){
-            printf("-");
+// Funktio, joka printtaa viivan, välin, pisteen tai newlinen sen mukaan, missä asennossa pico on.
+void print_asento(void *arg) {
+    while(1) {
+        if (napinAsento == true) {
+            if (laiteAsento == VIIVA){
+                printf("-");
+            }
+            else if (laiteAsento == PISTE){
+                printf(".");
+            }
+            else if (laiteAsento == VÄLI){
+                printf(" ");
+            }
+            else if (laiteAsento == NEWLINE){
+                printf("\n");
+            }
+            else {
+                printf("ei onnistunut grrr");
+            }
+            vTaskDelay(pdMS_TO_TICKS(500));
             napinAsento = false;
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
-        else if (laiteAsento == PISTE){
-            printf(".");
-            napinAsento = false;
-        }
-        else if (laiteAsento == VÄLI){
-            printf("  ");
-        }
-        else
-            printf("nfaofnoasdfnsdof");
-    }
-    napinAsento = false;      
+    }   
 }
+
 
 // ICM Sensorin funktio, joka lukee loopilla kokoajan sensorin tilaa.
-
 void imu_task(void *pvParameters) {
     (void)pvParameters;
     float ax, ay, az, gx, gy, gz, t;
@@ -67,15 +66,14 @@ void imu_task(void *pvParameters) {
         if (ICM42670_start_with_default_values() != 0){
             printf("ICM-42670P could not initialize accelerometer or gyroscope\n");
         }
-    } else {
+    }
+    else {
         printf("Failed to initialize ICM-42670P.\n");
     }
 
-    // Start collection data here. Infinite loop.   
     while (1)
     {
-        if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
-            
+        if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {       
             //printf("Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n", ax, ay, az, gx, gy, gz, t);
             if (ay >= a){
                 laiteAsento = PISTE;
@@ -86,62 +84,48 @@ void imu_task(void *pvParameters) {
             else if (az >= a){
                 laiteAsento = VÄLI;
             }
+            else if (ay <= -a){
+                laiteAsento = NEWLINE;
+            }
             else{
             }     
         }   
         else {
             printf("Failed to read imu data\n");
         }
-    print_asento();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
-
-/* Tilakone
-static void imu_task(void *arg){
-    (void)arg;
-    
-    while(1){
-        if (programState == DATA_READY) {
-            programState == WAITING;
-        }
-        //tight_loop_contents();
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-*/
 
 
 int main() {
   
   stdio_init_all();
-
     while (!stdio_usb_connected()){
         sleep_ms(10);
     }
     
     init_hat_sdk();
-    sleep_ms(300); //Wait some time so initialization of USB and hat is done.
-    // Luodaan taski vasemman puoliselle 1. napille.
+    sleep_ms(300); // Wait some time so initialization of USB and hat is done.
 
     gpio_set_irq_enabled_with_callback(BUTTON1, GPIO_IRQ_EDGE_FALL, true, btn1_fxn);
-    init_red_led();
 
-    /*
-    // Luodaan taski oikeanpuoliselle 2. napille.
-    gpio_set_irq_enabled_with_callback(BUTTON2, GPIO_IRQ_EDGE_FALL, true, btn2_fxn);
-    init_rgb_led();
-    */
-
-
-    TaskHandle_t hSensorTask, hPrintTask, hUSB = NULL;
-
-    //  Gyro sensorin taski.
-    TaskHandle_t hIMUTask = NULL;
     BaseType_t result;
+
+    // Taski print funktiolle.
+    TaskHandle_t printTask = NULL;
+    result = xTaskCreate(print_asento, "print_asento", DEFAULT_STACK_SIZE, NULL, 2, &printTask);
+
+    if (result != pdPASS) {
+        printf("Print task creation failed\n");
+        return 0;
+    }
+
+    // ICM sensorin taski.
+    TaskHandle_t hIMUTask = NULL;
     result = xTaskCreate(imu_task, "IMUTask", DEFAULT_STACK_SIZE, NULL, 2, &hIMUTask);
 
-    if(result != pdPASS) {
+    if (result != pdPASS) {
         printf("IMU task creation failed\n");
         return 0;
     }
@@ -152,4 +136,3 @@ int main() {
     // Never reach this line.
     return 0;
 }
-
