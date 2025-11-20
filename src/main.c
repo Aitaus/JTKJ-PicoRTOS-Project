@@ -1,3 +1,7 @@
+// Iida Hotti ja Elias Herranen
+// Jaetaan 6 pistettä tasan kummankin kesken, koska teimme koodia aina yhdessä.
+
+
 
 #include <stdio.h>
 #include <string.h>
