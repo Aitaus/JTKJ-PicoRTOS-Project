@@ -31,7 +31,7 @@ static void btn1_fxn(uint gpio, uint32_t eventMask) {
 }
 
 
-// Funktio, joka printtaa viivan, välin, pisteen tai newlinen sen mukaan, missä asennossa pico on.
+// Funktio, joka printtaa viivan, välin, pisteen tai newlinen sen mukaan, missä asennossa pico on ja kun nappia on painettu.
 void print_asento(void *arg) {
     while(1) {
         if (napinAsento == true) {
