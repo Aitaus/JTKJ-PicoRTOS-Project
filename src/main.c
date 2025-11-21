@@ -1,5 +1,5 @@
 // Iida Hotti ja Elias Herranen
-// Jaetaan 6 pistettä tasan kummankin kesken, koska teimme koodia aina yhdessä.
+// Jaetaan 6 pistettä tasan kummankin kesken, koska teimme projektia aina yhdessä.
 
 
 
