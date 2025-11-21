@@ -59,7 +59,7 @@ void print_asento(void *arg) {
 }
 
 
-// ICM Sensorin funktio, joka lukee loopilla kokoajan sensorin tilaa.
+// ICM sensorifunktio, joka lukee loopilla kokoajan sensorin tilaa.
 void imu_task(void *pvParameters) {
     (void)pvParameters;
     float ax, ay, az, gx, gy, gz, t;
@@ -116,7 +116,7 @@ int main() {
 
     BaseType_t result;
 
-    // Taski print funktiolle.
+    // Taski print_asento funktiolle.
     TaskHandle_t printTask = NULL;
     result = xTaskCreate(print_asento, "print_asento", DEFAULT_STACK_SIZE, NULL, 2, &printTask);
 
